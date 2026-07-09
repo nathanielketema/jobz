@@ -1,23 +1,37 @@
 {
-	"name": "jobz",
-	"private": true,
-	"version": "0.0.1",
-	"type": "module",
-	"scripts": {
-		"dev": "vite dev",
-		"build": "vite build",
-		"preview": "vite preview",
-		"prepare": "svelte-kit sync || echo ''",
-		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
-	},
-	"devDependencies": {
-		"@sveltejs/adapter-auto": "^7.0.1",
-		"@sveltejs/kit": "^2.63.0",
-		"@sveltejs/vite-plugin-svelte": "^7.1.2",
-		"svelte": "^5.56.1",
-		"svelte-check": "^4.6.0",
-		"typescript": "^6.0.3",
-		"vite": "^8.0.16"
-	}
+    "name": "jobz",
+    "private": true,
+    "version": "0.0.1",
+    "type": "module",
+    "scripts": {
+        "dev": "vite dev",
+        "build": "vite build",
+        "preview": "vite preview",
+        "prepare": "svelte-kit sync || echo ''",
+        "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+        "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+        "fmt": "biome format .",
+        "fmt:write": "biome format . --write",
+        "db:push": "drizzle-kit push",
+        "db:generate": "drizzle-kit generate",
+        "db:migrate": "drizzle-kit migrate",
+        "db:studio": "drizzle-kit studio"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "^2.5.4",
+        "@libsql/client": "^0.17.4",
+        "@sveltejs/adapter-auto": "^7.0.1",
+        "@sveltejs/kit": "^2.69.3",
+        "@sveltejs/vite-plugin-svelte": "^7.2.0",
+        "@types/node": "^26.1.1",
+        "drizzle-kit": "1.0.0-rc.4",
+        "svelte": "^5.56.4",
+        "svelte-check": "^4.7.3",
+        "typescript": "^7.0.2",
+        "vite": "^8.1.4"
+    },
+    "dependencies": {
+        "drizzle-orm": "1.0.0-rc.4",
+        "zod": "^4.4.3"
+    }
 }
