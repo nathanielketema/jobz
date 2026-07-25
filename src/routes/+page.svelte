@@ -18,6 +18,7 @@
 <main>
     <header>
         {#if entry}
+            <!-- TODO(#3): better error handling/reporting -->
             <form {...add_job}>
                 <label>
                     <b>Company name:</b>
@@ -62,6 +63,7 @@
 
     <table>
         <thead>
+            <!-- TODO: use your schema instead of hardcoding -->
             <tr>
                 <th>ID</th>
                 <th>Company</th>
@@ -71,6 +73,7 @@
                 <th>Status</th>
             </tr>
             <tr>
+                <!-- TODO: apply table filters -->
                 <td>Sort</td>
                 <td>
                     <input type="text" placeholder="Filter company...">
