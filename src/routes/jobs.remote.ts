@@ -1,13 +1,14 @@
+import db from "$lib/server/db";
 import z from "zod";
 import { form, query } from "$app/server";
-import db from "$lib/server/db";
 import { jobs } from "$lib/server/db/schema";
+import { eq } from "drizzle-orm";
 
 export const list_jobs = query(async () => {
     return db.query.jobs.findMany();
 });
 
-const new_job_application = z.object({
+const new_job = z.object({
     company: z.string().nonempty(),
     kind: z.enum(["hybrid", "remote", "onsite"]).default("onsite"),
     link: z.string().nonempty(),
@@ -15,7 +16,7 @@ const new_job_application = z.object({
     status: z.enum(["pending", "rejected", "next stage"]).default("pending"),
 });
 
-export const add_job = form(new_job_application, async (data) => {
+export const insert_job = form(new_job, async (data) => {
     await db.insert(jobs).values({
         company: data.company,
         kind: data.kind,
@@ -23,4 +24,9 @@ export const add_job = form(new_job_application, async (data) => {
         type: data.type,
         status: data.status,
     });
+});
+
+export const delete_job = form(z.object({ id: z.number().int() }), async (data) => {
+    await db.delete(jobs).where(eq(jobs.id, data.id));
+    await list_jobs().refresh();
 });

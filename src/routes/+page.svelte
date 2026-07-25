@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { add_job, list_jobs } from "./jobs.remote";
+    import { delete_job, insert_job, list_jobs } from "./jobs.remote";
 
-    const { company, kind, link, type, status } = add_job.fields;
+    const { company, kind, link, type, status } = insert_job.fields;
 
     let entry = $state(false);
     function on_entry() {
@@ -19,7 +19,7 @@
     <header>
         {#if entry}
             <!-- TODO(#3): better error handling/reporting -->
-            <form {...add_job}>
+            <form {...insert_job}>
                 <label>
                     <b>Company name:</b>
                     <input {...company.as("text")}>
@@ -65,6 +65,7 @@
         <thead>
             <!-- TODO(#4): use your schema instead of hardcoding -->
             <tr>
+                <td></td>
                 <th>ID</th>
                 <th>Company</th>
                 <th>Kind</th>
@@ -74,6 +75,7 @@
             </tr>
             <tr>
                 <!-- TODO(#5): apply table filters -->
+                <td></td>
                 <td>Sort</td>
                 <td>
                     <input type="text" placeholder="Filter company...">
@@ -100,14 +102,21 @@
                         <option value="all" selected>All</option>
                         <option value="pending">Pending</option>
                         <option value="rejected">Rejected</option>
-                        <option value="nextround">Next round</option>
+                        <option value="next stage">Next Stage</option>
                     </select>
                 </td>
             </tr>
         </thead>
         <tbody>
             {#each await list_jobs() as job (job.id)}
+                {@const row = delete_job.for(job.id)}
                 <tr>
+                    <td>
+                        <form {...row}>
+                            <input {...row.fields.id.as("hidden", job.id)} />
+                            <button type="submit">x</button>
+                        </form>
+                    </td>
                     <td>{job.id}</td>
                     <td><a href={job.link}>{job.company}</a></td>
                     <td>{job.kind}</td>
@@ -117,7 +126,7 @@
                 </tr>
             {:else}
                 <tr>
-                    <td colspan="6">No applications yet.</td>
+                    <td colspan="7">No applications yet.</td>
                 </tr>
             {/each}
         </tbody>
@@ -126,62 +135,27 @@
 
 <style> 
     /* TODO(#2): cleanup color style */
-    table {
-        border-collapse: collapse;
-        background: white;
-        table-layout: fixed;
-        min-width: 80ch;
-    }
-
-    th, td {
-        padding: 0.75rem 1rem;
-        text-align: center;
-        border: 1px solid black;
-    }
-
-    th {
-        font-weight: 600;
-        text-transform: capitalize;
-        letter-spacing: 0.5px;
-    }
-
-    tr:hover {
-        background: #f5f5f5;
-    }
-
-    [data-status="pending"]   { color: #d97706; }
-    [data-status="rejected"]  { color: #b91c1c; }
-    [data-status="next stage"] { color: #15803d; }
-
-    td[colspan="6"] {
-        text-align: center;
-        padding: 3rem;
-        color: #666;
-        font-style: italic;
-    }
-
-    input, select {
-        width: 100%;
-        padding: 0.5rem;
-        text-align: left;
-        font-family: inherit;
-        font-size: 0.75rem;
-    }
-
-    a {
-        color: #2156a5;
-        text-decoration: none;
-
-        &:hover {
-            text-decoration: underline;
-        }
-    }
-
     header {
         display: flex;
         flex-direction: column;
         width: 100%;
         min-width: 40ch;
+
+        button {
+            align-self: flex-end;
+            padding: 0.5rem;
+            border: 1px solid black;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            width: 30%;
+            cursor: pointer;
+
+            &:hover {
+                background: blue;
+                color: white;
+            }
+        }
 
         form {
             align-self: flex-start;
@@ -209,7 +183,7 @@
                 }
 
                 select {
-                    width: 25%;
+                    width: 30%;
                 }
             }
 
@@ -225,19 +199,73 @@
                 }
             }
         }
+    }
 
-        button {
-            align-self: flex-end;
-            padding: 0.5rem;
+    table {
+        border-collapse: collapse;
+        background: white;
+        table-layout: fixed;
+        min-width: 80ch;
+
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: center;
             border: 1px solid black;
-            margin-top: 1rem;
-            margin-bottom: 1rem;
+        }
+
+        td:first-child {
+            border: none;
+            opacity: 0;
+
+            button {
+                color: red;
+                border: none;
+                font-size: 1.2rem;
+                background: none;
+                cursor: pointer;
+            }
+        }
+
+        th {
             font-weight: 600;
-            width: 30%;
+            text-transform: capitalize;
+            letter-spacing: 0.5px;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+
+            td:first-child {
+                opacity: 1;
+                background: white;
+            }
+        }
+
+        td[data-status="pending"]   { color: yellow; }
+        td[data-status="rejected"]  { color: red; }
+        td[data-status="next stage"] { color: green; }
+
+        td[colspan="7"] {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+            font-style: italic;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.5rem;
+            text-align: left;
+            font-family: inherit;
+            font-size: 0.75rem;
+        }
+
+        a {
+            color: #2156a5;
+            text-decoration: none;
 
             &:hover {
-                background: blue;
-                color: white;
+                text-decoration: underline;
             }
         }
     }
