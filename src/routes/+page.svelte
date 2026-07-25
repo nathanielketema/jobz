@@ -14,7 +14,7 @@
     }
 </script>
 
-<!-- TODO: fix the multiple source of truths for `select` tags. -->
+<!-- TODO(#1): fix the multiple source of truths for `select` tags. -->
 <main>
     <header>
         {#if entry}
