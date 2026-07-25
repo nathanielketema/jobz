@@ -73,7 +73,7 @@
                 <th>Status</th>
             </tr>
             <tr>
-                <!-- TODO: apply table filters -->
+                <!-- TODO(#5): apply table filters -->
                 <td>Sort</td>
                 <td>
                     <input type="text" placeholder="Filter company...">
