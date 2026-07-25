@@ -63,7 +63,7 @@
 
     <table>
         <thead>
-            <!-- TODO: use your schema instead of hardcoding -->
+            <!-- TODO(#4): use your schema instead of hardcoding -->
             <tr>
                 <th>ID</th>
                 <th>Company</th>
