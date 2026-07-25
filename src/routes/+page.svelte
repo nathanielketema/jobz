@@ -122,7 +122,7 @@
 </main>
 
 <style> 
-    /* TODO: cleanup color style */
+    /* TODO(#2): cleanup color style */
     table {
         border-collapse: collapse;
         background: white;
