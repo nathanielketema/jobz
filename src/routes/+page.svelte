@@ -1,59 +1,92 @@
 <script lang="ts">
     import { delete_job, insert_job, list_jobs } from "./jobs.remote";
 
-    const { company, kind, link, type, status } = insert_job.fields;
+    const job_fields = insert_job.fields;
+
+    const enhance = insert_job.enhance(async (form) => {
+        submit_error = null;
+        try {
+            const ok = await form.submit();
+            if (ok) {
+                list_jobs().refresh();
+                entry = false;
+            }
+        } catch (e) {
+            submit_error = "Something went wrong. Please try again.";
+        }
+    });
 
     let entry = $state(false);
+    let submit_error = $state<string | null>(null);
+
     function on_entry() {
         entry = true;
-    }
-
-    function on_submit() {
-        list_jobs().refresh();
-        entry = false;
+        submit_error = null;
     }
 </script>
 
-<!-- TODO(#1): fix the multiple source of truths for `select` tags. -->
+<!-- TODO: fix the multiple source of truths for `select` tags. -->
+<!-- Everything should come from the schema. Even the html tags. -->
+<!-- - These laters can be capitalized using css -->
+<!-- - This file should not know anything about the database -->
+<!-- - The ui layout should only be driven from the schema -->
+<!-- - If possible everyting from title to select elements should come -->
+<!--   from the schema. -->
 <main>
     <header>
         {#if entry}
             <!-- TODO(#3): better error handling/reporting -->
-            <form {...insert_job}>
-                <label>
-                    <b>Company name:</b>
-                    <input {...company.as("text")}>
-                </label>
-                <label>
-                    <b>Link:</b>
-                    <input {...link.as("text")}>
-                </label>
-                <label>
-                    <b>Kind:</b>
-                    <select {...kind.as("select")}>
-                        <option value="onsite" selected>Onsite</option>
-                        <option value="remote">Remote</option>
-                        <option value="hybrid">Hybrid</option>
-                    </select>
-                </label>
-                <label>
-                    <b>Type:</b>
-                    <select {...type.as("select")}>
-                        <option value="full time">Full time</option>
-                        <option value="part time">Part time</option>
-                        <option value="internship" selected>Internship</option>
-                    </select>
-                </label>
-                <label>
-                    <b>Status:</b>
-                    <select {...status.as("select")}>
-                        <option value="pending" selected>Pending</option>
-                        <option value="rejected">Rejected</option>
-                        <option value="next stage">Next stage</option>
-                    </select>
-                </label>
+            <form {...enhance}>
                 <section>
-                    <button onclick={on_submit}>Add</button>
+                    <label>
+                        <b>Company name:</b>
+                        <input {...job_fields.company.as("text")}>
+                    </label>
+                    {#each job_fields.company.issues() ?? [] as issue}
+                        <p>{issue.message}</p>
+                    {/each}
+                </section>
+                <section>
+                    <label>
+                        <b>Link:</b>
+                        <input {...job_fields.link.as("text")}>
+                    </label>
+                    {#each job_fields.link.issues() ?? [] as issue}
+                        <p>{issue.message}</p>
+                    {/each}
+                </section>
+                <section>
+                    <label>
+                        <b>Kind:</b>
+                        <select {...job_fields.kind.as("select")}>
+                            <option value="onsite" selected>Onsite</option>
+                            <option value="remote">Remote</option>
+                            <option value="hybrid">Hybrid</option>
+                        </select>
+                    </label>
+                </section>
+                <section>
+                    <label>
+                        <b>Type:</b>
+                        <select {...job_fields.type.as("select")}>
+                            <option value="full time">Full time</option>
+                            <option value="part time">Part time</option>
+                            <option value="internship" selected>Internship</option>
+                        </select>
+                    </label>
+                </section>
+                <section>
+                    <label>
+                        <b>Status:</b>
+                        <select {...job_fields.status.as("select")}>
+                            <option value="pending" selected>Pending</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="next stage">Next stage</option>
+                        </select>
+                    </label>
+                </section>
+                <section class="button">
+                    <button type="submit">Add</button>
                 </section>
             </form>
         {:else}
@@ -158,44 +191,55 @@
         }
 
         form {
-            align-self: flex-start;
             display: flex;
             flex-direction: column;
             gap: 0.75rem;
             width: 100%;
 
-            label {
-                align-self: flex-start;
+            section.button {
                 display: flex;
-                justify-content: flex-start;
-                width: 50%;
-                gap: 0.6rem;
-
-                b {
-                    display: flex;
-                    justify-content: flex-end;
-                    align-items: center;
-                    width: 40%;
-                }
-
-                input {
-                    width: 60%;
-                }
-
-                select {
-                    width: 30%;
-                }
-            }
-
-            section {
-                align-self: flex-start;
-                display: flex;
-                justify-content: center;
+                justify-content: flex-end;
                 align-items: center;
                 width: 50%;
 
                 button {
                     width: 20%;
+                }
+            }
+
+            section {
+                display: flex;
+                justify-content: flex-start;
+                align-items: center;
+                width: 100%;
+                gap: 0.6rem;
+
+                p {
+                    font-size: 0.6rem;
+                    color: red;
+                }
+
+                label {
+                    align-self: flex-start;
+                    display: flex;
+                    justify-content: flex-start;
+                    width: 50%;
+                    gap: 0.6rem;
+
+                    b {
+                        display: flex;
+                        justify-content: flex-end;
+                        align-items: center;
+                        width: 40%;
+                    }
+
+                    input {
+                        width: 60%;
+                    }
+
+                    select {
+                        width: 30%;
+                    }
                 }
             }
         }
