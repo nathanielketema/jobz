@@ -25,7 +25,7 @@
     }
 </script>
 
-<!-- TODO: fix the multiple source of truths for `select` tags. -->
+<!-- TODO(#6): fix the multiple source of truths for `select` tags. -->
 <!-- Everything should come from the schema. Even the html tags. -->
 <!-- - These laters can be capitalized using css -->
 <!-- - This file should not know anything about the database -->
