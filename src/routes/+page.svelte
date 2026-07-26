@@ -241,7 +241,7 @@
             }
         }
 
-        td[data-status="pending"]   { color: yellow; }
+        td[data-status="pending"]   { color: orange; }
         td[data-status="rejected"]  { color: red; }
         td[data-status="next stage"] { color: green; }
 
