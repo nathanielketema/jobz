@@ -1,27 +1,45 @@
 <script lang="ts">
-    import { delete_job, insert_job, list_jobs } from "./jobs.remote";
+    import EntryForm from "./EntryForm.svelte";
+    import { delete_job, insert_job, job_meta_data, select_jobs } from "./jobs.remote";
 
-    const job_fields = insert_job.fields;
+    const meta = job_meta_data();
 
+    let entry_new = $state(false);
+    let submit_error = $state<string | null>(null);
+    let delete_error = $state<string | null>(null);
     const enhance = insert_job.enhance(async (form) => {
         submit_error = null;
         try {
             const ok = await form.submit();
             if (ok) {
-                list_jobs().refresh();
-                entry = false;
+                entry_new = false;
+            } else {
+                submit_error = "Please fix the validation errors above.";
             }
-        } catch (e) {
+        } catch {
             submit_error = "Something went wrong. Please try again.";
         }
     });
 
-    let entry = $state(false);
-    let submit_error = $state<string | null>(null);
-
-    function on_entry() {
-        entry = true;
+    function new_entry() {
+        entry_new = true;
         submit_error = null;
+        // Default values taken from the $lib/schema.ts
+        insert_job.fields.set({
+            kind: "onsite",
+            type: "internship",
+            status: "pending",
+        });
+    }
+
+    function format_table_title(title: string): string {
+        const string_formatted = format_field(title);
+        return string_formatted === "id" ? string_formatted.toUpperCase() : string_formatted;
+    }
+
+    function format_field(field: unknown): string {
+        if (typeof field !== "string") return String(field);
+        return field.replace(/_/g, " ");
     }
 </script>
 
@@ -33,115 +51,33 @@
 <!-- - If possible everyting from title to select elements should come -->
 <!--   from the schema. -->
 <main>
+    {#await meta then { fields, kind, type, status, insert_fields }}
+    {@const select_options = { kind, type, status }}
     <header>
-        {#if entry}
+        {#if entry_new}
             <!-- TODO(#3): better error handling/reporting -->
-            <form {...enhance}>
-                <section>
-                    <label>
-                        <b>Company name:</b>
-                        <input {...job_fields.company.as("text")}>
-                    </label>
-                    {#each job_fields.company.issues() ?? [] as issue}
-                        <p>{issue.message}</p>
-                    {/each}
-                </section>
-                <section>
-                    <label>
-                        <b>Link:</b>
-                        <input {...job_fields.link.as("text")}>
-                    </label>
-                    {#each job_fields.link.issues() ?? [] as issue}
-                        <p>{issue.message}</p>
-                    {/each}
-                </section>
-                <section>
-                    <label>
-                        <b>Kind:</b>
-                        <select {...job_fields.kind.as("select")}>
-                            <option value="onsite" selected>Onsite</option>
-                            <option value="remote">Remote</option>
-                            <option value="hybrid">Hybrid</option>
-                        </select>
-                    </label>
-                </section>
-                <section>
-                    <label>
-                        <b>Type:</b>
-                        <select {...job_fields.type.as("select")}>
-                            <option value="full time">Full time</option>
-                            <option value="part time">Part time</option>
-                            <option value="internship" selected>Internship</option>
-                        </select>
-                    </label>
-                </section>
-                <section>
-                    <label>
-                        <b>Status:</b>
-                        <select {...job_fields.status.as("select")}>
-                            <option value="pending" selected>Pending</option>
-                            <option value="rejected">Rejected</option>
-                            <option value="next stage">Next stage</option>
-                        </select>
-                    </label>
-                </section>
-                <section class="button">
-                    <button type="submit">Add</button>
-                </section>
-            </form>
+            <EntryForm {enhance} fields={insert_fields} {select_options}/>
         {:else}
-            <button onclick={on_entry}>New Entry</button>
+            <button onclick={new_entry}>New Entry</button>
         {/if}
     </header>
+
+    {#if submit_error || delete_error}
+        <p role="alert">{submit_error ?? delete_error}</p>
+    {/if}
 
     <table>
         <thead>
             <!-- TODO(#4): use your schema instead of hardcoding -->
             <tr>
                 <td></td>
-                <th>ID</th>
-                <th>Company</th>
-                <th>Kind</th>
-                <th>Type</th>
-                <th>Date applied</th>
-                <th>Status</th>
-            </tr>
-            <tr>
-                <!-- TODO(#5): apply table filters -->
-                <td></td>
-                <td>Sort</td>
-                <td>
-                    <input type="text" placeholder="Filter company...">
-                </td>
-                <td>
-                    <select name="kind" id="kind">
-                        <option value="all" selected>All</option>
-                        <option value="onsite">Onsite</option>
-                        <option value="remote">Remote</option>
-                        <option value="hybrid">Hybrid</option>
-                    </select>
-                </td>
-                <td>
-                    <select name="type" id="type">
-                        <option value="all" selected>All</option>
-                        <option value="full time">Full time</option>
-                        <option value="part time">Part time</option>
-                        <option value="internship">Internship</option>
-                    </select>
-                </td>
-                <td>Sort</td>
-                <td>
-                    <select name="status" id="status">
-                        <option value="all" selected>All</option>
-                        <option value="pending">Pending</option>
-                        <option value="rejected">Rejected</option>
-                        <option value="next stage">Next Stage</option>
-                    </select>
-                </td>
+                {#each fields as field}
+                    <th>{format_table_title(field)}</th>
+                {/each}
             </tr>
         </thead>
         <tbody>
-            {#each await list_jobs() as job (job.id)}
+            {#each await select_jobs() as job (job.id)}
                 {@const row = delete_job.for(job.id)}
                 <tr>
                     <td>
@@ -150,12 +86,15 @@
                             <button type="submit">x</button>
                         </form>
                     </td>
-                    <td>{job.id}</td>
-                    <td><a href={job.link}>{job.company}</a></td>
-                    <td>{job.kind}</td>
-                    <td>{job.type}</td>
-                    <td>{job.date_applied}</td>
-                    <td data-status={job.status}>{job.status}</td>
+                    {#each fields as field}
+                        {#if field === "status"}
+                            <td data-status={job.status}>{format_field(job.status!)}</td>
+                        {:else if field === "company"}
+                            <td><a href={job.link}>{format_field(job.company)}</a></td>
+                        {:else}
+                            <td>{format_field(job[field])}</td>
+                        {/if}
+                    {/each}
                 </tr>
             {:else}
                 <tr>
@@ -163,7 +102,8 @@
                 </tr>
             {/each}
         </tbody>
-    </table>
+        </table>
+    {/await}
 </main>
 
 <style> 
@@ -174,8 +114,8 @@
         width: 100%;
         min-width: 40ch;
 
-        button {
-            align-self: flex-end;
+        > button {
+            align-self: center;
             padding: 0.5rem;
             border: 1px solid black;
             margin-top: 1rem;
@@ -189,66 +129,17 @@
                 color: white;
             }
         }
+    }
 
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-            width: 100%;
-
-            section.button {
-                display: flex;
-                justify-content: flex-end;
-                align-items: center;
-                width: 50%;
-
-                button {
-                    width: 20%;
-                }
-            }
-
-            section {
-                display: flex;
-                justify-content: flex-start;
-                align-items: center;
-                width: 100%;
-                gap: 0.6rem;
-
-                p {
-                    font-size: 0.6rem;
-                    color: red;
-                }
-
-                label {
-                    align-self: flex-start;
-                    display: flex;
-                    justify-content: flex-start;
-                    width: 50%;
-                    gap: 0.6rem;
-
-                    b {
-                        display: flex;
-                        justify-content: flex-end;
-                        align-items: center;
-                        width: 40%;
-                    }
-
-                    input {
-                        width: 60%;
-                    }
-
-                    select {
-                        width: 30%;
-                    }
-                }
-            }
-        }
+    p {
+        columns: red;
     }
 
     table {
         border-collapse: collapse;
         background: white;
         table-layout: fixed;
+        text-transform: capitalize;
         min-width: 80ch;
 
         th, td {
@@ -272,7 +163,6 @@
 
         th {
             font-weight: 600;
-            text-transform: capitalize;
             letter-spacing: 0.5px;
         }
 
@@ -285,9 +175,10 @@
             }
         }
 
-        td[data-status="pending"]   { color: orange; }
-        td[data-status="rejected"]  { color: red; }
-        td[data-status="next stage"] { color: green; }
+        td[data-status="pending"]  { color: orange; }
+        td[data-status="rejected"] { color: red; }
+        td[data-status="advance"]  { color: blue; }
+        td[data-status="accepted"] { color: green; }
 
         td[colspan="7"] {
             text-align: center;

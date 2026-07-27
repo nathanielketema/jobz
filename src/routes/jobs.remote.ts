@@ -1,11 +1,28 @@
 import { error } from "@sveltejs/kit";
 import { eq } from "drizzle-orm";
-import z from "zod";
-import { form, query } from "$app/server";
+import { form, prerender, query } from "$app/server";
 import db from "$lib/server/db";
-import { jobs } from "$lib/server/db/schema";
+import {
+    jobs,
+    job_fields,
+    SchemaDelete,
+    SchemaInsert,
+    SchemaSelect,
+    type JobFields,
+    type JobInsert,
+} from "$lib/server/db/schema";
 
-export const list_jobs = query(async () => {
+export const job_meta_data = prerender(() => {
+    return {
+        fields: job_fields as (keyof JobFields)[],
+        kind: SchemaSelect.shape.kind.options,
+        type: SchemaSelect.shape.type.options,
+        status: SchemaSelect.shape.status.options,
+        insert_fields: Object.keys(SchemaInsert.shape) as (keyof JobInsert)[],
+    };
+});
+
+export const select_jobs = query(async () => {
     try {
         return await db.query.jobs.findMany();
     } catch (e) {
@@ -14,15 +31,7 @@ export const list_jobs = query(async () => {
     }
 });
 
-const new_job = z.object({
-    company: z.string().nonempty("Company name is required"),
-    kind: z.enum(["hybrid", "remote", "onsite"]).default("onsite"),
-    link: z.string().nonempty("Link is required"),
-    type: z.enum(["full time", "part time", "internship"]).default("internship"),
-    status: z.enum(["pending", "rejected", "next stage"]).default("pending"),
-});
-
-export const insert_job = form(new_job, async (data) => {
+export const insert_job = form(SchemaInsert, async (data) => {
     try {
         await db.insert(jobs).values({
             company: data.company,
@@ -37,10 +46,9 @@ export const insert_job = form(new_job, async (data) => {
     }
 });
 
-export const delete_job = form(z.object({ id: z.number().int() }), async (data) => {
+export const delete_job = form(SchemaDelete, async (data) => {
     try {
         await db.delete(jobs).where(eq(jobs.id, data.id));
-        await list_jobs().refresh();
     } catch (e) {
         console.error("failed to delete job:", e);
         error(500, "Failed to delete job. Please try again.");
