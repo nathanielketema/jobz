@@ -178,7 +178,7 @@
             font-style: italic;
         }
 
-        input, select {
+        input {
             width: 100%;
             padding: 0.5rem;
             text-align: left;
