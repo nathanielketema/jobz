@@ -43,19 +43,11 @@
     }
 </script>
 
-<!-- TODO(#6): fix the multiple source of truths for `select` tags. -->
-<!-- Everything should come from the schema. Even the html tags. -->
-<!-- - These laters can be capitalized using css -->
-<!-- - This file should not know anything about the database -->
-<!-- - The ui layout should only be driven from the schema -->
-<!-- - If possible everyting from title to select elements should come -->
-<!--   from the schema. -->
 <main>
     {#await meta then { fields, kind, type, status, insert_fields }}
     {@const select_options = { kind, type, status }}
     <header>
         {#if entry_new}
-            <!-- TODO(#3): better error handling/reporting -->
             <EntryForm {enhance} fields={insert_fields} {select_options}/>
         {:else}
             <button onclick={new_entry}>New Entry</button>
@@ -68,7 +60,6 @@
 
     <table>
         <thead>
-            <!-- TODO(#4): use your schema instead of hardcoding -->
             <tr>
                 <td></td>
                 {#each fields as field}
