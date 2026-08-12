@@ -12,7 +12,7 @@ export const jobs = sqliteTable("jobs", {
     company: text().notNull(),
     link: text().notNull().unique(),
     kind: text({ enum: kind }).default("onsite"),
-    type: text({ enum: type }).default("internship"),
+    type: text({ enum: type }).default("full_time"),
     status: text({ enum: status }).default("pending"),
     date_applied: text()
         .$defaultFn(() => new Date().toISOString().split("T")[0])
