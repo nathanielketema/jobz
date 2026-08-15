@@ -1,12 +1,23 @@
 <script lang="ts">
+    import type { JobFields, JobSelect } from "$lib/server/db/schema";
     import EntryForm from "./EntryForm.svelte";
-    import { delete_job, insert_job, job_meta_data, select_jobs } from "./jobs.remote";
+    import JobRow from "./JobRow.svelte";
+    import { insert_job, job_meta_data, select_jobs } from "./jobs.remote";
 
     const meta = job_meta_data();
+    const jobs = select_jobs();
 
     let entry_new = $state(false);
     let submit_error = $state<string | null>(null);
     let delete_error = $state<string | null>(null);
+    let filters = $state<Record<keyof JobFields, string>>({
+        id: "",
+        company: "",
+        kind: "",
+        type: "",
+        status: "",
+        date_applied: "",
+    });
     const enhance = insert_job.enhance(async (form) => {
         submit_error = null;
         try {
@@ -41,6 +52,27 @@
         if (typeof field !== "string") return String(field);
         return field.replace(/_/g, " ");
     }
+
+    function clear_filters() {
+        filters = {
+            id: "",
+            company: "",
+            kind: "",
+            type: "",
+            status: "",
+            date_applied: "",
+        };
+    }
+
+    function filtered_jobs(job_list: JobSelect[]) {
+        return job_list.filter((job) =>
+            Object.entries(filters).every(([field, filter]) => {
+                return String(job[field as keyof JobFields])
+                    .toLowerCase()
+                    .includes(filter.trim().toLowerCase());
+            }),
+        );
+    }
 </script>
 
 <main>
@@ -59,6 +91,10 @@
     {/if}
 
     <table>
+        <colgroup>
+            <col />
+            <col class="id-column" />
+        </colgroup>
         <thead>
             <tr>
                 <td></td>
@@ -66,32 +102,46 @@
                     <th>{format_table_title(field)}</th>
                 {/each}
             </tr>
+            <tr class="filters">
+                <td>
+                    <button type="button" onclick={clear_filters} aria-label="Clear filters" title="Clear filters">x</button>
+                </td>
+                {#each fields as field}
+                    <td>
+                        {#if field === "kind" || field === "type" || field === "status"}
+                            <select bind:value={filters[field]} aria-label={`Filter by ${format_field(field)}`}>
+                                <option value="">All</option>
+                                {#each select_options[field] as option}
+                                    <option value={option}>{format_field(option)}</option>
+                                {/each}
+                            </select>
+                        {:else}
+                            <input
+                                type="search"
+                                bind:value={filters[field]}
+                                aria-label={`Filter by ${format_field(field)}`}
+                            />
+                        {/if}
+                    </td>
+                {/each}
+            </tr>
         </thead>
         <tbody>
-            {#each await select_jobs() as job (job.id)}
-                {@const row = delete_job.for(job.id)}
-                <tr>
-                    <td>
-                        <form {...row}>
-                            <input {...row.fields.id.as("hidden", job.id)} />
-                            <button type="submit">x</button>
-                        </form>
-                    </td>
-                    {#each fields as field}
-                        {#if field === "status"}
-                            <td data-status={job.status}>{format_field(job.status!)}</td>
-                        {:else if field === "company"}
-                            <td><a href={job.link}>{format_field(job.company)}</a></td>
-                        {:else}
-                            <td>{format_field(job[field])}</td>
-                        {/if}
+            {#await jobs then job_list}
+                {#if job_list.length}
+                    {#each filtered_jobs(job_list) as job (job.id)}
+                        <JobRow {job} {fields} {select_options} />
+                    {:else}
+                        <tr>
+                            <td colspan="7">No matching applications.</td>
+                        </tr>
                     {/each}
-                </tr>
-            {:else}
-                <tr>
-                    <td colspan="7">No applications yet.</td>
-                </tr>
-            {/each}
+                {:else}
+                    <tr>
+                        <td colspan="7">No applications yet.</td>
+                    </tr>
+                {/if}
+            {/await}
         </tbody>
         </table>
     {/await}
@@ -133,6 +183,10 @@
         text-transform: capitalize;
         min-width: 80ch;
 
+        col.id-column {
+            width: 1%;
+        }
+
         th, td {
             padding: 0.75rem 1rem;
             text-align: center;
@@ -141,15 +195,6 @@
 
         td:first-child {
             border: none;
-            opacity: 0;
-
-            button {
-                color: red;
-                border: none;
-                font-size: 1.2rem;
-                background: none;
-                cursor: pointer;
-            }
         }
 
         th {
@@ -160,16 +205,8 @@
         tr:hover {
             background: #f5f5f5;
 
-            td:first-child {
-                opacity: 1;
-                background: white;
-            }
+            td:first-child { background: white; }
         }
-
-        td[data-status="pending"]  { color: orange; }
-        td[data-status="rejected"] { color: red; }
-        td[data-status="advance"]  { color: blue; }
-        td[data-status="accepted"] { color: green; }
 
         td[colspan="7"] {
             text-align: center;
@@ -178,20 +215,37 @@
             font-style: italic;
         }
 
-        input {
-            width: 100%;
-            padding: 0.5rem;
-            text-align: left;
-            font-family: inherit;
-            font-size: 0.75rem;
-        }
+        tr.filters {
+            background: white;
+            text-transform: none;
 
-        a {
-            color: #2156a5;
-            text-decoration: none;
+            td {
+                padding: 0.35rem;
+            }
 
-            &:hover {
-                text-decoration: underline;
+            td:first-child {
+                opacity: 0;
+            }
+
+            &:hover td:first-child {
+                opacity: 1;
+            }
+
+            input,
+            select {
+                width: 100%;
+                border: 1px solid black;
+                padding: 0.3rem;
+                background: white;
+                font: inherit;
+            }
+
+            button {
+                color: red;
+                border: none;
+                background: none;
+                cursor: pointer;
+                font: inherit;
             }
         }
     }

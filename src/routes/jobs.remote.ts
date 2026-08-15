@@ -3,13 +3,14 @@ import { eq } from "drizzle-orm";
 import { form, prerender, query } from "$app/server";
 import db from "$lib/server/db";
 import {
-    jobs,
+    type JobFields,
+    type JobInsert,
     job_fields,
+    jobs,
     SchemaDelete,
     SchemaInsert,
     SchemaSelect,
-    type JobFields,
-    type JobInsert,
+    SchemaUpdate,
 } from "$lib/server/db/schema";
 
 export const job_meta_data = prerender(() => {
@@ -52,5 +53,23 @@ export const delete_job = form(SchemaDelete, async (data) => {
     } catch (e) {
         console.error("failed to delete job:", e);
         error(500, "Failed to delete job. Please try again.");
+    }
+});
+
+export const update_job = form(SchemaUpdate, async (data) => {
+    try {
+        await db
+            .update(jobs)
+            .set({
+                company: data.company,
+                link: data.link,
+                kind: data.kind,
+                type: data.type,
+                status: data.status,
+            })
+            .where(eq(jobs.id, data.id));
+    } catch (e) {
+        console.error("failed to update job:", e);
+        error(500, "Failed to update job. Please try again.");
     }
 });

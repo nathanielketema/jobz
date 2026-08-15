@@ -3,7 +3,7 @@ import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-orm/zod";
 import z from "zod";
 
-const kind = ["onsite", "hybrid", "remote" ] as const;
+const kind = ["onsite", "hybrid", "remote"] as const;
 const type = ["internship", "full_time", "part_time"] as const;
 const status = ["pending", "rejected", "advance", "accepted"] as const;
 
@@ -37,6 +37,10 @@ export const SchemaSelect = createSelectSchema(jobs, {
 });
 
 export const SchemaDelete = createSelectSchema(jobs).pick({ id: true });
+
+export const SchemaUpdate = SchemaInsert.extend({
+    id: SchemaDelete.shape.id,
+});
 
 export const SchemaFields = SchemaSelect.omit({ link: true });
 export const job_fields = Object.keys(SchemaFields.shape);
