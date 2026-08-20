@@ -23,7 +23,7 @@ export const SchemaInsert = createInsertSchema(jobs, {
     company: z.string({ error: "Company name is required" }).nonempty(),
     link: z.url({ error: "Must be a valid URL" }),
     kind: z.enum(kind).default("onsite"),
-    type: z.enum(type).default("internship"),
+    type: z.enum(type).default("full_time"),
     status: z.enum(status).default("pending"),
 }).omit({
     id: true,

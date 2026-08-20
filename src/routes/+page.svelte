@@ -38,7 +38,7 @@
         // Default values taken from the $lib/schema.ts
         insert_job.fields.set({
             kind: "onsite",
-            type: "internship",
+            type: "full_time",
             status: "pending",
         });
     }
