@@ -5,7 +5,7 @@ import z from "zod";
 
 const kind = ["onsite", "hybrid", "remote"] as const;
 const type = ["internship", "full_time", "part_time"] as const;
-const status = ["pending", "rejected", "advance", "accepted"] as const;
+const status = ["pending", "rejected", "advance", "accepted", "failed"] as const;
 
 export const jobs = sqliteTable("jobs", {
     id: integer().primaryKey({ autoIncrement: true }),

@@ -220,6 +220,7 @@
     td[data-status="rejected"] { color: red; }
     td[data-status="advance"]  { color: blue; }
     td[data-status="accepted"] { color: green; }
+    td[data-status="failed"] { color: pink; }
 
     a {
         color: #2156a5;
