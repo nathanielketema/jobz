@@ -7,6 +7,7 @@
     const meta = job_meta_data();
     const jobs = select_jobs();
 
+
     let entry_new = $state(false);
     let submit_error = $state<string | null>(null);
     let delete_error = $state<string | null>(null);
@@ -84,6 +85,9 @@
         {:else}
             <button onclick={new_entry}>New Entry</button>
         {/if}
+        {#await jobs then job_list}
+            <p>Count: {filtered_jobs(job_list).length}</p>
+        {/await}
     </header>
 
     {#if submit_error || delete_error}
@@ -149,6 +153,7 @@
 
 <style> 
     /* TODO(#2): cleanup color style */
+
     header {
         display: flex;
         flex-direction: column;
@@ -170,7 +175,13 @@
                 color: white;
             }
         }
+
+        p {
+            align-self: center;
+            padding-bottom: 0.6rem;
+        }
     }
+
 
     p {
         columns: red;
