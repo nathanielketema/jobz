@@ -70,7 +70,14 @@
             {@const remove = delete_job.for(job.id)}
             <div class="row-actions">
                 <button class="edit" type="button" onclick={begin_edit}>🔁</button>
-                <form class="delete" {...remove}>
+                <form
+                    class="delete"
+                    {...remove.enhance(async ({ submit }) => {
+                        if (window.confirm(`Delete "${job.company}"? This cannot be undone.`)) {
+                            await submit();
+                        }
+                    })}
+                >
                     <input {...remove.fields.id.as("hidden", job.id)} />
                     <button type="submit" aria-label="Delete entry" title="Delete entry">x</button>
                 </form>
